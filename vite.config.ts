@@ -5,4 +5,11 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
   ],
+  server: {
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: 5173,
+    },
+  },
 })

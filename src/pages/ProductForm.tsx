@@ -10,7 +10,7 @@ import type { Category, Product } from '../types';
 import toast from 'react-hot-toast';
 
 const schema = z.object({
-  title: z.string().min(1, 'Title is required').refine((v) => v.trim().length > 0, 'Cannot be empty spaces'),
+  name: z.string().min(1, 'Title is required').refine((v) => v.trim().length > 0, 'Cannot be empty spaces'),
   description: z.string().min(20, 'Description must be at least 20 characters').refine((v) => v.trim().length > 0, 'Cannot be empty spaces'),
   brand: z.string().min(1, 'Brand is required').refine((v) => v.trim().length > 0, 'Cannot be empty spaces'),
   price: z.string().refine((v) => !isNaN(Number(v)) && Number(v) > 0, 'Price must be greater than 0'),
@@ -48,7 +48,7 @@ export default function ProductForm() {
 
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<ProductFormData>({
     resolver: zodResolver(schema),
-    defaultValues: { title: '', description: '', brand: '', price: '', stock: '', categoryId: '', images: [{ url: '' }] },
+    defaultValues: { name: '', description: '', brand: '', price: '', stock: '', categoryId: '', images: [{ url: '' }] },
     mode: 'onBlur',
   });
 
@@ -57,13 +57,15 @@ export default function ProductForm() {
   useEffect(() => {
     if (product) {
       reset({
-        title: product.title,
+        name: product.name ?? product.title ?? '',
         description: product.description,
         brand: product.brand,
         price: String(product.price),
         stock: String(product.stock),
         categoryId: String(product.categoryId ?? product.category?.id ?? ''),
-        images: product.images.map((url) => ({ url })),
+        images: product.images?.length
+          ? product.images.map((img) => ({ url: img.url }))
+          : [{ url: '' }],
       });
     }
   }, [product, reset]);
@@ -71,10 +73,18 @@ export default function ProductForm() {
   const mutation = useMutation({
     mutationFn: (payload: ProductFormData) => {
       const body = {
-        ...payload,
+        name: payload.name,
+        description: payload.description,
+        brand: payload.brand,
         price: Number(payload.price),
         stock: Number(payload.stock),
-        images: payload.images.map((i) => i.url),
+        categoryId: payload.categoryId,
+        images: payload.images.map((i) => {
+          const ext = i.url.split('.').pop()?.split('?')[0]?.toUpperCase() ?? '';
+          const validFormats = ['JPG', 'JPEG', 'PNG', 'WEBP', 'GIF', 'SVG'];
+          const format = validFormats.includes(ext) ? ext : 'JPG';
+          return { url: i.url, format, size: 0 };
+        }),
       };
       return isEdit ? api.patch(`/admin/products/${id}`, body) : api.post('/admin/products', body);
     },
@@ -90,7 +100,7 @@ export default function ProductForm() {
     <main className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">{isEdit ? 'Edit Product' : 'Add New Product'}</h1>
       <form onSubmit={handleSubmit((v) => mutation.mutate(v))} className="bg-white rounded-2xl shadow p-6 flex flex-col gap-4">
-        <FormInput label="Title" {...register('title')} error={errors.title?.message} />
+        <FormInput label="Title" {...register('name')} error={errors.name?.message} />
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-700">Description</label>
           <textarea

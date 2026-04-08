@@ -192,7 +192,7 @@ export default function AdminDashboard() {
                 {products.map((p) => (
                   <tr key={p.id} className="border-t hover:bg-gray-50">
                     <td className="px-4 py-3">{p.id}</td>
-                    <td className="px-4 py-3 font-medium">{p.title}</td>
+                    <td className="px-4 py-3 font-medium">{p.name ?? p.title}</td>
                     <td className="px-4 py-3 text-gray-500">{p.brand}</td>
                     <td className="px-4 py-3">${Number(p.price).toFixed(2)}</td>
                     <td className="px-4 py-3">{p.stock}</td>

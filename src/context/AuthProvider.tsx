@@ -15,22 +15,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const login = async (email: string, password: string) => {
-    if (email === 'admin@admin.com' && password === 'admin123') {
-      setUser({
-        email,
-        role: 'ADMIN',
-        token: 'admin-token',
-      });
-      return;
-    }
-
     const res = await api.post('/auth/users/login', { email, password });
-    const u = res.data.data ?? res.data;
-
+    const d = res.data.data ?? res.data;
+    const token = d.token ?? d.accessToken ?? d.access_token;
+    const userObj = d.user ?? d;
+    const role = userObj.role ?? 'USER';
     setUser({
-      email: u.email,
-      role: u.role ?? 'USER',
-      token: u.token,
+      id: userObj.id,
+      email: userObj.email ?? email,
+      name: userObj.name,
+      role: role === 'ADMIN' ? 'ADMIN' : 'USER',
+      token,
     });
   };
 
