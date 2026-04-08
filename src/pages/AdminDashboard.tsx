@@ -84,26 +84,33 @@ export default function AdminDashboard() {
 
   
   const createCategoryMutation = useMutation({
-    mutationFn: (body: CategoryForm) => api.post('/categories', body),
+    mutationFn: (body: CategoryForm) => {
+      const payload: Record<string, string> = { name: body.name };
+      if (body.description && body.description.trim()) payload.description = body.description.trim();
+      return api.post('/categories', payload);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category created');
       setShowCategoryForm(false);
       categoryForm.reset();
     },
-    onError: () => toast.error('Failed to create category'),
+    onError: (err: any) => toast.error(err?.response?.data?.message ?? 'Failed to create category'),
   });
 
   const editCategoryMutation = useMutation({
-    mutationFn: ({ id, body }: { id: string; body: CategoryForm }) =>
-      api.put(`/categories/${id}`, body),
+    mutationFn: ({ id, body }: { id: string; body: CategoryForm }) => {
+      const payload: Record<string, string> = { name: body.name };
+      if (body.description && body.description.trim()) payload.description = body.description.trim();
+      return api.put(`/categories/${id}`, payload);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category updated');
       setEditCategory(null);
       categoryForm.reset();
     },
-    onError: () => toast.error('Failed to update category'),
+    onError: (err: any) => toast.error(err?.response?.data?.message ?? 'Failed to update category'),
   });
 
   const deleteCategoryMutation = useMutation({
@@ -225,7 +232,7 @@ export default function AdminDashboard() {
                   <tr key={o.id} className="border-t hover:bg-gray-50">
                     <td className="px-4 py-3">{o.id}</td>
                     <td className="px-4 py-3">{o.user?.email ?? o.fullName}</td>
-                    <td className="px-4 py-3">${Number(o.totalAmount).toFixed(2)}</td>
+                    <td className="px-4 py-3">${Number((o as any).total ?? o.totalAmount ?? 0).toFixed(2)}</td>
                     <td className="px-4 py-3">{o.paymentMethod}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${

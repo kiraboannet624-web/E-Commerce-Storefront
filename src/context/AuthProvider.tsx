@@ -6,7 +6,14 @@ import type { AuthUser } from '../types';
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => {
     const stored = localStorage.getItem('user');
-    return stored ? JSON.parse(stored) : null;
+    if (!stored) return null;
+    const parsed = JSON.parse(stored);
+    // Clear stale session if no token exists
+    if (!parsed?.token) {
+      localStorage.removeItem('user');
+      return null;
+    }
+    return parsed;
   });
 
   useEffect(() => {

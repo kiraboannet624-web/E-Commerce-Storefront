@@ -1,6 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '../api/axios';
-import type { Order } from '../types';
+
+interface OrderItem {
+  id: string;
+  productId: string;
+  quantity: number;
+  price: number;
+  product?: { name: string };
+}
+
+interface Order {
+  id: string;
+  status: string;
+  total: number;
+  createdAt: string;
+  items: OrderItem[];
+}
 
 export default function Orders() {
   const { data: orders = [], isLoading } = useQuery<Order[]>({
@@ -8,7 +23,7 @@ export default function Orders() {
     queryFn: async () => {
       const res = await api.get('/auth/orders');
       const body = res.data;
-      return Array.isArray(body) ? body : (body.data ?? body.items ?? body.orders ?? []);
+      return Array.isArray(body) ? body : (body.data ?? body.orders ?? []);
     },
   });
 
@@ -24,17 +39,24 @@ export default function Orders() {
           {orders.map((o) => (
             <div key={o.id} className="bg-white rounded-xl shadow p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-gray-800">Order #{o.id}</span>
+                <span className="font-semibold text-gray-800">Order #{o.id.slice(-6)}</span>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                   o.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
                   o.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
                   o.status === 'SHIPPED' ? 'bg-blue-100 text-blue-700' :
+                  o.status === 'PAID' ? 'bg-purple-100 text-purple-700' :
                   'bg-yellow-100 text-yellow-700'
                 }`}>{o.status}</span>
               </div>
-              <p className="text-sm text-gray-500">Payment: {o.paymentMethod}</p>
-              <p className="text-sm text-gray-500">Address: {o.shippingAddress}, {o.city}</p>
-              <p className="text-blue-600 font-bold mt-2">${Number(o.totalAmount).toFixed(2)}</p>
+              <div className="flex flex-col gap-1 mb-2">
+                {o.items?.map((item) => (
+                  <p key={item.id} className="text-sm text-gray-500">
+                    {item.product?.name ?? `Product #${item.productId}`} × {item.quantity} — ${Number(item.price).toFixed(2)}
+                  </p>
+                ))}
+              </div>
+              <p className="text-blue-600 font-bold">${Number(o.total).toFixed(2)}</p>
+              <p className="text-xs text-gray-400 mt-1">{new Date(o.createdAt).toLocaleDateString()}</p>
             </div>
           ))}
         </div>

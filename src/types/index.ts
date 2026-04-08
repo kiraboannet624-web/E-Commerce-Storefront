@@ -45,14 +45,15 @@ export type PaymentMethod = 'CREDIT_CARD' | 'PAYPAL' | 'MOBILE_MONEY' | 'CASH_ON
 export interface Order {
   id: string;
   status: OrderStatus;
-  totalAmount: number;
-  paymentMethod: PaymentMethod;
-  shippingAddress: string;
-  city: string;
+  total?: number;
+  totalAmount?: number;
+  paymentMethod?: PaymentMethod;
+  shippingAddress?: string;
+  city?: string;
   postalCode?: string;
-  phoneNumber: string;
-  fullName: string;
+  phoneNumber?: string;
+  fullName?: string;
   createdAt: string;
   items?: CartItem[];
-  user?: { email: string; name?: string };
+  user?: { id: string; email: string; name?: string };
 }
